@@ -4,10 +4,10 @@
 *This project was developed as part of the PIDEV -3A33 at **Esprit School of Engineering** (Academic Year 2025-2026).*
 
 ## Features
-### 👥 Module Utilisateurs (Med Taher Zeidi)
+### 👥 Module Utilisateurs (Mohamed Taher Zeidi)
 - [ ] Inscription avec email et mot de passe
 - [ ] Connexion sécurisée
-- [ ] Gestion des rôles : Patient / Coach / Admin
+- [ ] Gestion des rôles : Patient / Doctor / nutritionniste / Coach / Admin
 - [ ] Modification du profil utilisateur
 - [ ] Tableau de bord personnalisé
 
@@ -25,12 +25,21 @@
 - [ ] Intégration de vidéos explicatives
 - [ ] Adaptation automatique selon les performances
 
-### 🌿 Module Parcours de Santé (Ahmed Regaieg)
+### 🌿 Module journal De santé (Mohamed Khalil Sedghiani)
 - [ ] Création de programmes bien-être
 - [ ] Suivi des indicateurs santé (poids, tension, glycémie)
 - [ ] Journal quotidien (humeur, sommeil, activité)
 - [ ] Alertes personnalisées
 - [ ] Génération de rapports d'évolution
+
+### 🏃‍♂️ Module Parcours De Santé (Ahmed Regaieg)
+- [ ] Création, consultation, modification et suppression d'un Parcours De Santé (utilisateur authentifié)
+- [ ] Ajout, consultation, modification et suppression des publications liées à un ParcoursDeSanté
+- [ ] Ajout, consultation, modification et suppression des commentaires sur les publications
+- [ ] Affichage du ParcoursDeSanté le plus proche de la localisation de l'utilisateur
+- [ ] Consultation de la météo du Parcours De Santé sélectionné
+- [ ] Classement des publications par popularité (nombre de commentaires, hashtags)
+- [ ] Filtrage automatique des bad words remplacés par *
 
 ### 🥗 Module Nutrition (Hamza Najjar)
 - [ ] Création de plans alimentaires personnalisés
@@ -47,9 +56,9 @@
 
 
 ## Tech Stack
-- **Frontend**:tailwindcss
-- **Backend**: Symfony 
-- **Database**: Mysgl
+- **Frontend**: tailwindcss
+- **Backend**: Symfony
+- **Database**: MySQL
 - **Architecture**: MVC
 
 ## Contributors
@@ -57,8 +66,9 @@
 - [Chahd Maaloul] - [gestion des plans sportives]
 - [Ahmed Regaieg] - [gestion des parcours de santés]
 - [Hamza Najjar] - [gestion des plan de nutritions]
-- [Med Taher Zeidi] - [gestion des utilisateurs ]
- 
+- [Mohamed Taher Zeidi] - [gestion des utilisateurs]
+- [Mohamed Khalil Sedghiani] - [Gestion journal De santé]
+
 
 ## Academic Context
 Developed at **Esprit School of Engineering - Tunisia**  
@@ -66,7 +76,6 @@ Developed at **Esprit School of Engineering - Tunisia**
 
 ## Getting Started
 ### Prérequis
-- ### Prérequis
 
 Avant de commencer, assurez-vous d'avoir installé les éléments suivants sur votre machine :
 
