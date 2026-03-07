@@ -18,7 +18,9 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            custom_authenticator: App\Security\Authenticator
+            custom_authenticator: 
+                - App\Security\Authenticator
+                - App\Security\GoogleAuthenticator
             logout:
                 path: app_logout
                 target: app_login
@@ -35,9 +37,16 @@ security:
             access_denied_handler: App\Security\AccessDeniedHandler
             access_denied_url: /access-denied
             
+        # 2FA verification firewall
+        two_factor:
+            pattern: ^/2fa/
+            provider: app_user_provider
+    
+            
     # Access Control - Role-Based Authorization
     # Note: Only the *first* access control that matches will be used
     access_control:
+
         # Public routes (no authentication required)
         - { path: ^/auth/, roles: PUBLIC_ACCESS }
         - { path: ^/verify-email, roles: PUBLIC_ACCESS }
@@ -47,8 +56,16 @@ security:
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
         - { path: ^/access-denied, roles: PUBLIC_ACCESS }
         - { path: ^/api/, roles: PUBLIC_ACCESS }
+        - { path: ^/connect/google, roles: PUBLIC_ACCESS }
+        - { path: ^/2fa/, roles: IS_AUTHENTICATED_PARTIALLY }
         - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/health/accessible, roles: PUBLIC_ACCESS }
+        
+        # Appointment API requires authentication (must be before general /api/ rule)
+        - { path: ^/appointment/api/, roles: [ROLE_PATIENT, ROLE_MEDECIN, ROLE_COACH, ROLE_NUTRITIONIST] }
+        
+        # Public API routes (for AI model, etc.)
+        - { path: ^/api/, roles: PUBLIC_ACCESS }
         
         # Admin only routes
         - { path: ^/admin, roles: ROLE_ADMIN }
@@ -62,7 +79,9 @@ security:
         # Protected routes (any authenticated user)
         - { path: ^/dashboard, roles: [ROLE_PATIENT, ROLE_MEDECIN, ROLE_COACH, ROLE_NUTRITIONIST] }
         - { path: ^/profile, roles: [ROLE_PATIENT, ROLE_MEDECIN, ROLE_COACH, ROLE_NUTRITIONIST, ROLE_ADMIN] }
+        - { path: ^/profile/2fa, roles: [ROLE_PATIENT, ROLE_MEDECIN, ROLE_COACH, ROLE_NUTRITIONIST, ROLE_ADMIN] }
         - { path: ^/appointments, roles: [ROLE_PATIENT, ROLE_MEDECIN, ROLE_COACH, ROLE_NUTRITIONIST] }
+        - { path: ^/appointment, roles: [ROLE_PATIENT, ROLE_MEDECIN, ROLE_COACH, ROLE_NUTRITIONIST] }
         - { path: ^/health, roles: [ROLE_PATIENT, ROLE_MEDECIN, ROLE_COACH, ROLE_NUTRITIONIST] }
         - { path: ^/nutrition, roles: [ROLE_PATIENT, ROLE_NUTRITIONIST] }
         - { path: ^/teleconsultation, roles: [ROLE_PATIENT, ROLE_MEDECIN] }

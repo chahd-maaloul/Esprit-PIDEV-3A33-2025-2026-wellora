@@ -7,10 +7,13 @@ use App\Entity\Coach;
 use App\Entity\Medecin;
 use App\Entity\Nutritionist;
 use App\Entity\Patient;
+use App\Entity\ProfessionalVerification;
 use App\Entity\User;
 use App\Form\LoginFormType;
 use App\Form\RegistrationFormType;
 use App\Security\Authenticator;
+use App\Service\CaptchaService;
+use App\Service\DiplomaVerificationService;
 use App\Service\LoginValidationService;
 use App\Service\PasswordResetService;
 use App\Service\EmailVerificationService;
@@ -38,7 +41,9 @@ class AuthController extends AbstractController
         private LoginValidationService $loginValidationService,
         private PasswordResetService $passwordResetService,
         private EmailVerificationService $emailVerificationService,
-        private TokenStorageInterface $tokenStorage
+        private TokenStorageInterface $tokenStorage,
+        private CaptchaService $captchaService,
+        private ?DiplomaVerificationService $diplomaVerificationService = null
     ) {}
 
     #[Route('/login', name: 'app_login')]
@@ -310,15 +315,51 @@ class AuthController extends AbstractController
             $postKeys = array_keys($request->request->all());
             error_log("[DEBUG] POST data keys: " . implode(', ', $postKeys));
             
-            // Get POST data (keep CSRF token for validation)
+            // Only submit fields that actually belong to the Symfony form.
+            // This avoids "extra fields" errors for custom top-level inputs
+            // like captcha_code, _submit, _captcha_validated, etc.
             $postData = $request->request->all();
+            $allowedFields = array_keys($form->all());
+            $formData = [];
+            foreach ($allowedFields as $fieldName) {
+                if (array_key_exists($fieldName, $postData)) {
+                    $formData[$fieldName] = $postData[$fieldName];
+                }
+            }
             
             // Submit form WITHOUT CSRF validation (false parameter)
-            $form->submit($postData, false);
+            $form->submit($formData, false);
         }
         
         if ($form->isSubmitted()) {
             error_log("[DEBUG] Form isValid: " . ($form->isValid() ? 'true' : 'false'));
+            
+            // ========== CAPTCHA VALIDATION ==========
+            $captchaCode = $request->request->get('captcha_code');
+            error_log("[DEBUG] Captcha code submitted: " . ($captchaCode ? 'yes' : 'no'));
+            
+            if (empty($captchaCode)) {
+                $this->addFlash('error', 'Veuillez entrer le code de vérification.');
+                error_log("[DEBUG] Captcha validation failed - empty code");
+                $template = $type === 'patient' ? 'auth/register-patient.html.twig' : 'auth/register-professional.html.twig';
+                return $this->render($template, [
+                    'registrationForm' => $form->createView(),
+                    'type' => $type
+                ]);
+            }
+            
+            if (!$this->captchaService->validate($captchaCode)) {
+                $this->addFlash('error', 'Le code de vérification est incorrect. Veuillez réessayer.');
+                error_log("[DEBUG] Captcha validation failed - invalid code");
+                $template = $type === 'patient' ? 'auth/register-patient.html.twig' : 'auth/register-professional.html.twig';
+                return $this->render($template, [
+                    'registrationForm' => $form->createView(),
+                    'type' => $type
+                ]);
+            }
+            error_log("[DEBUG] Captcha validation passed");
+            // ========== END CAPTCHA VALIDATION ==========
+            
             // DEBUG: Log form data
             error_log("[DEBUG] Form submitted - email: " . $user->getEmail());
             error_log("[DEBUG] Form submitted - firstName: " . $user->getFirstName());
@@ -563,6 +604,57 @@ class AuthController extends AbstractController
                 $this->entityManager->flush();
                 error_log("[DEBUG] User saved to database - id: " . $user->getId());
                 
+                // Create professional verification record if applicable
+                if ($this->diplomaVerificationService && in_array($type, ['medecin', 'coach', 'nutritionist'])) {
+                    try {
+                        $diplomaPath = null;
+                        
+                        // Get diploma path from user entity
+                        if (method_exists($user, 'getDiplomaUrl') && $user->getDiplomaUrl()) {
+                            $diplomaPath = $user->getDiplomaUrl();
+                        }
+                        
+                        // Get license number and specialty
+                        $licenseNumber = null;
+                        $specialty = null;
+                        
+                        if (method_exists($user, 'getLicenseNumber')) {
+                            $licenseNumber = $user->getLicenseNumber();
+                        }
+                        if (method_exists($user, 'getSpecialite')) {
+                            $specialty = $user->getSpecialite();
+                        }
+                        
+                        // Create verification record
+                        $verification = new ProfessionalVerification();
+                        $verification->setProfessionalUuid($user->getUuid());
+                        $verification->setProfessionalEmail($user->getEmail());
+                        $verification->setLicenseNumber($licenseNumber);
+                        $verification->setSpecialty($specialty);
+                        $verification->setDiplomaPath($diplomaPath);
+                        $verification->setStatus(ProfessionalVerification::STATUS_PENDING);
+                        $verification->setCreatedAt(new \DateTime());
+                        
+                        $this->entityManager->persist($verification);
+                        $this->entityManager->flush();
+                        
+                        error_log("[DEBUG] Professional verification record created - id: " . $verification->getId());
+                        
+                        // Process verification automatically if diploma is available
+                        if ($diplomaPath) {
+                            try {
+                                $verification = $this->diplomaVerificationService->processVerification($verification);
+                                $this->entityManager->flush();
+                                error_log("[DEBUG] Verification processed - score: " . $verification->getConfidenceScore());
+                            } catch (\Exception $e) {
+                                error_log("[DEBUG] Verification processing error: " . $e->getMessage());
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        error_log("[DEBUG] Error creating verification record: " . $e->getMessage());
+                    }
+                }
+                
                 // Send verification email
                 try {
                     $this->emailVerificationService->sendVerificationEmail($user);
@@ -603,6 +695,7 @@ class AuthController extends AbstractController
     public function verifyEmail(Request $request): Response
     {
         $token = $request->query->get('token', '');
+        $prefillEmail = $request->query->get('email', '');
         
         // If token is provided, verify email
         if (!empty($token)) {
@@ -630,6 +723,7 @@ class AuthController extends AbstractController
         return $this->render('auth/verify-email.html.twig', [
             'user' => $user,
             'hasToken' => !empty($token),
+            'prefillEmail' => $prefillEmail,
         ]);
     }
     
@@ -686,6 +780,34 @@ class AuthController extends AbstractController
                 'message' => 'Erreur lors de l\'envoi de l\'email: ' . $e->getMessage()
             ]);
         }
+    }
+
+    #[Route('/api/resend-verification-email-public', name: 'app_resend_verification_email_public', methods: ['POST'])]
+    public function resendVerificationEmailPublic(Request $request): JsonResponse
+    {
+        $email = trim((string) $request->request->get('email', ''));
+
+        if ($email === '') {
+            return $this->json([
+                'success' => false,
+                'message' => 'Veuillez entrer votre adresse email.'
+            ]);
+        }
+
+        try {
+            $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+
+            if ($user instanceof User && !$user->isEmailVerified()) {
+                $this->emailVerificationService->resendVerificationEmail($user);
+            }
+        } catch (\Throwable $e) {
+            error_log('[DEBUG] Public resend verification failed: ' . $e->getMessage());
+        }
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Si un compte non vérifié existe avec cette adresse, un email de vérification a été envoyé.'
+        ]);
     }
     
     #[Route('/api/validate-password', name: 'app_validate_password', methods: ['POST'])]
@@ -774,7 +896,7 @@ class AuthController extends AbstractController
         }
         
         if (in_array('ROLE_COACH', $roles)) {
-            return $this->redirectToRoute('coach_dashboard');
+            return $this->redirectToRoute('coach_clients');
         }
         
         if (in_array('ROLE_NUTRITIONIST', $roles)) {

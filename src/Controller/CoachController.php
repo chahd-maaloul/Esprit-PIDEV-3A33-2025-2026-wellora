@@ -2,226 +2,55 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Repository\UserRepository;
+use App\Repository\GoalRepository;
+use App\Repository\DailyPlanRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\Coach;
+use App\Repository\ExercisesRepository;
 
 #[Route('/coach')]
 class CoachController extends AbstractController
 {
-    // Coach Dashboard - Main entry point
-    #[Route('/dashboard', name: 'coach_dashboard')]
-    public function dashboard(): Response
-    {
-        $stats = [
-            'totalClients' => 24,
-            'activePrograms' => 18,
-            'pendingReviews' => 7,
-            'sessionsThisWeek' => 32,
-            'avgAdherenceRate' => 87,
-            'newClientsThisMonth' => 5,
-        ];
-
-        $recentActivity = [
-            [
-                'type' => 'workout_completed',
-                'client' => 'John Doe',
-                'message' => 'Completed "Upper Body Strength" workout',
-                'time' => '2 hours ago',
-                'icon' => 'fa-dumbbell',
-                'color' => 'text-green-500',
-            ],
-            [
-                'type' => 'message_received',
-                'client' => 'Sarah Wilson',
-                'message' => 'Sent a message about knee pain concerns',
-                'time' => '3 hours ago',
-                'icon' => 'fa-comment-alt',
-                'color' => 'text-blue-500',
-            ],
-            [
-                'type' => 'goal_achieved',
-                'client' => 'Mike Johnson',
-                'message' => 'Achieved "Run 5K in under 25 min" goal',
-                'time' => '5 hours ago',
-                'icon' => 'fa-trophy',
-                'color' => 'text-yellow-500',
-            ],
-            [
-                'type' => 'video_submitted',
-                'client' => 'Emily Brown',
-                'message' => 'Submitted squat form video for review',
-                'time' => '6 hours ago',
-                'icon' => 'fa-video',
-                'color' => 'text-purple-500',
-            ],
-            [
-                'type' => 'program_assigned',
-                'client' => 'David Lee',
-                'message' => 'Assigned "12-Week Weight Loss Program"',
-                'time' => '1 day ago',
-                'icon' => 'fa-clipboard-list',
-                'color' => 'text-wellcare-500',
-            ],
-        ];
-
-        $upcomingSessions = [
-            [
-                'client' => 'Sarah Wilson',
-                'time' => 'Today, 2:00 PM',
-                'type' => 'Video Consultation',
-                'avatar' => 'S',
-            ],
-            [
-                'client' => 'Mike Johnson',
-                'time' => 'Today, 4:00 PM',
-                'type' => 'Form Review',
-                'avatar' => 'M',
-            ],
-            [
-                'client' => 'Emily Brown',
-                'time' => 'Tomorrow, 10:00 AM',
-                'type' => 'Progress Assessment',
-                'avatar' => 'E',
-            ],
-        ];
-
-        $clientProgress = [
-            [
-                'name' => 'John Doe',
-                'avatar' => 'J',
-                'progress' => 75,
-                'goal' => 'Marathon Training',
-                'status' => 'on_track',
-            ],
-            [
-                'name' => 'Sarah Wilson',
-                'avatar' => 'S',
-                'progress' => 45,
-                'goal' => 'Weight Loss',
-                'status' => 'needs_attention',
-            ],
-            [
-                'name' => 'Mike Johnson',
-                'avatar' => 'M',
-                'progress' => 90,
-                'goal' => 'Strength Building',
-                'status' => 'excellent',
-            ],
-        ];
-
-        return $this->render('coach/dashboard.html.twig', [
-            'pageTitle' => 'Coach Dashboard - WellCare Connect',
-            'stats' => $stats,
-            'recentActivity' => $recentActivity,
-            'upcomingSessions' => $upcomingSessions,
-            'clientProgress' => $clientProgress,
-        ]);
-    }
-
+    
     // Client Management
-    #[Route('/clients', name: 'coach_clients')]
-    public function clientManagement(): Response
-    {
-        $clients = [
-            [
-                'id' => 1,
-                'name' => 'John Doe',
-                'avatar' => 'J',
-                'email' => 'john.doe@email.com',
-                'phone' => '+1 234 567 890',
-                'status' => 'active',
-                'adherenceRate' => 92,
-                'goals' => ['Marathon Training', 'Weight Management'],
-                'nextCheckIn' => 'Tomorrow, 2:00 PM',
-                'lastActive' => '2 hours ago',
-                'startDate' => 'Jan 15, 2024',
-                'medicalNotes' => 'No limitations',
-                'progress' => 75,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Sarah Wilson',
-                'avatar' => 'S',
-                'email' => 'sarah.wilson@email.com',
-                'phone' => '+1 234 567 891',
-                'status' => 'active',
-                'adherenceRate' => 78,
-                'goals' => ['Weight Loss', 'Cardio Fitness'],
-                'nextCheckIn' => 'Today, 4:00 PM',
-                'lastActive' => '1 hour ago',
-                'startDate' => 'Feb 1, 2024',
-                'medicalNotes' => 'Knee sensitivity - avoid high impact',
-                'progress' => 45,
-            ],
-            [
-                'id' => 3,
-                'name' => 'Mike Johnson',
-                'avatar' => 'M',
-                'email' => 'mike.johnson@email.com',
-                'phone' => '+1 234 567 892',
-                'status' => 'active',
-                'adherenceRate' => 95,
-                'goals' => ['Strength Building', 'Muscle Gain'],
-                'nextCheckIn' => 'Friday, 10:00 AM',
-                'lastActive' => '30 mins ago',
-                'startDate' => 'Jan 1, 2024',
-                'medicalNotes' => 'Shoulder rehab - modified upper body',
-                'progress' => 90,
-            ],
-            [
-                'id' => 4,
-                'name' => 'Emily Brown',
-                'avatar' => 'E',
-                'email' => 'emily.brown@email.com',
-                'phone' => '+1 234 567 893',
-                'status' => 'active',
-                'adherenceRate' => 85,
-                'goals' => ['Flexibility', 'Posture Correction'],
-                'nextCheckIn' => 'Wednesday, 3:00 PM',
-                'lastActive' => '5 hours ago',
-                'startDate' => 'Mar 1, 2024',
-                'medicalNotes' => 'Lower back pain history',
-                'progress' => 60,
-            ],
-            [
-                'id' => 5,
-                'name' => 'David Lee',
-                'avatar' => 'D',
-                'email' => 'david.lee@email.com',
-                'phone' => '+1 234 567 894',
-                'status' => 'inactive',
-                'adherenceRate' => 45,
-                'goals' => ['Weight Loss', 'General Fitness'],
-                'nextCheckIn' => 'TBD',
-                'lastActive' => '1 week ago',
-                'startDate' => 'Feb 15, 2024',
-                'medicalNotes' => 'No limitations',
-                'progress' => 25,
-            ],
-            [
-                'id' => 6,
-                'name' => 'Lisa Anderson',
-                'avatar' => 'L',
-                'email' => 'lisa.anderson@email.com',
-                'phone' => '+1 234 567 895',
-                'status' => 'active',
-                'adherenceRate' => 88,
-                'goals' => ['Athletic Performance', 'Speed Training'],
-                'nextCheckIn' => 'Thursday, 11:00 AM',
-                'lastActive' => '4 hours ago',
-                'startDate' => 'Jan 20, 2024',
-                'medicalNotes' => 'Ankle sprain recovery',
-                'progress' => 70,
-            ],
-        ];
-
-        return $this->render('coach/client-management.html.twig', [
-            'pageTitle' => 'Client Management - WellCare Connect',
-            'clients' => $clients,
-        ]);
+#[Route('/clients', name: 'coach_clients')]
+public function clientManagement(UserRepository $userRepository , GoalRepository $goalRepository ): Response
+{
+    // Récupérer le coach connecté
+    $coach = $this->getUser();
+    
+    if (!$coach instanceof Coach) {
+        throw $this->createAccessDeniedException('Vous devez être un coach pour accéder à cette page.');
+    }
+    
+    // Récupérer les patients de ce coach
+    $clients = $userRepository->findPatientsByCoach($coach);
+    
+    // Récupérer UNIQUEMENT les goals du coach connecté
+    $coachGoals = $goalRepository->findBy(['coachId' => $coach->getUuid()]);
+    
+    // Organiser les goals par client pour faciliter l'affichage
+    $goalsByClient = [];
+    foreach ($coachGoals as $goal) {
+        $patientId = $goal->getPatient()->getUuid(); // ou getId() selon votre entité
+        if (!isset($goalsByClient[$patientId])) {
+            $goalsByClient[$patientId] = [];
+        }
+        $goalsByClient[$patientId][] = $goal;
     }
 
+    return $this->render('coach/client-management.html.twig', [
+        'pageTitle' => 'Client Management - WellCare Connect',
+        'clients' => $clients,
+        'coachGoals' => $coachGoals,
+        'goalsByClient' => $goalsByClient, // Ajoutez cette variable
+    ]);
+}
     // Client Detail Page
     #[Route('/clients/{id}', name: 'coach_client_detail')]
     public function clientDetail(int $id): Response
@@ -270,6 +99,7 @@ class CoachController extends AbstractController
             'pageTitle' => 'Client Detail - WellCare Connect',
             'client' => $client,
             'workoutHistory' => $workoutHistory,
+            
         ]);
     }
 
@@ -435,54 +265,7 @@ class CoachController extends AbstractController
         ]);
     }
 
-    // Communication Hub
-    #[Route('/messages', name: 'coach_messages')]
-    public function communicationHub(): Response
-    {
-        $conversations = [
-            [
-                'id' => 1,
-                'client' => 'John Doe',
-                'avatar' => 'J',
-                'lastMessage' => 'Great job on today\'s workout! Your form is improving.',
-                'time' => '2 hours ago',
-                'unread' => 0,
-                'online' => true,
-            ],
-            [
-                'id' => 2,
-                'client' => 'Sarah Wilson',
-                'avatar' => 'S',
-                'lastMessage' => 'I\'m experiencing some knee discomfort after running',
-                'time' => '30 mins ago',
-                'unread' => 2,
-                'online' => true,
-            ],
-            [
-                'id' => 3,
-                'client' => 'Mike Johnson',
-                'avatar' => 'M',
-                'lastMessage' => 'Video uploaded for squat form review',
-                'time' => '1 hour ago',
-                'unread' => 1,
-                'online' => false,
-            ],
-            [
-                'id' => 4,
-                'client' => 'Emily Brown',
-                'avatar' => 'E',
-                'lastMessage' => 'Thank you for the mobility exercises, they really help!',
-                'time' => 'Yesterday',
-                'unread' => 0,
-                'online' => false,
-            ],
-        ];
-
-        return $this->render('coach/communication-hub.html.twig', [
-            'pageTitle' => 'Communication Hub - WellCare Connect',
-            'conversations' => $conversations,
-        ]);
-    }
+    
 
     // Reporting Tools
     #[Route('/reports', name: 'coach_reports')]

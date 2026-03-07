@@ -2,12 +2,20 @@
 framework:
     notifier:
         texter_transports:
+            sendgrid: '%env(MAILER_DSN)%'
             twilio: '%env(TWILIO_DSN)%'
+        chatter_transports:
+            mercure: '%env(MERCURE_DSN)%'
         
         # Email notifications are handled via the mailer component
         # Configure MAILER_DSN in .env for email delivery
         
+    
         channel_policy:
-            urgent: ['sms', 'email']
+            # use chat/slack, chat/telegram, sms/twilio or sms/nexmo
+            urgent: ['email']
             high: ['email']
             medium: ['email']
+            low: ['email']
+        admin_recipients:
+            - { email: admin@example.com }
