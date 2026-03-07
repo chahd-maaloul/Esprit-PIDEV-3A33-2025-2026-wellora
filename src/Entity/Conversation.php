@@ -20,7 +20,7 @@ class Conversation
     #[ORM\JoinColumn(name: 'patient_uuid', referencedColumnName: 'uuid', nullable: false)]
     private ?User $patient = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'coach')]
     #[ORM\JoinColumn(name: 'coach_uuid', referencedColumnName: 'uuid', nullable: false)]
     private ?User $coach = null;
 

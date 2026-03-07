@@ -262,7 +262,7 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Conversation>
      */
-    #[ORM\OneToMany(targetEntity: Conversation::class, mappedBy: 'patient')]
+    #[ORM\OneToMany(targetEntity: Conversation::class, mappedBy: 'coach')]
     private Collection $coach;
 
     /**
