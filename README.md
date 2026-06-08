@@ -70,8 +70,9 @@ Déploiement : https://esprit-pidev-3a33-2025-2026-wellora-production.up.railway
 - **Architecture**: MVC
 - 
 ## Tuteur
--Soumaya Sassi Mahfoudh
--Maroua Belkneni 
+- Soumaya Sassi Mahfoudh
+- Maroua Belkneni 
+-
 
 ## Contributors
 - [Mariem fakhfakh] - [gestion des consultations]
