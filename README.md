@@ -7,6 +7,9 @@ Elle permet aux utilisateurs de gérer leur santé de manière globale à traver
 
 L’objectif du projet est de centraliser les services liés au bien-être dans une seule application intelligente et interactive.
 
+###🎥Démo
+Vidéo : https://www.youtube.com/watch?v=KJHGk0WjhiQ
+Déploiement : https://esprit-pidev-3a33-2025-2026-wellora-production.up.railway.app/
 
 ## Features
 ### 👥 Module Utilisateurs (Mohamed Taher Zeidi)
@@ -103,21 +106,16 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants sur v
 - **MySQL** (pour exécuter des requêtes depuis VS Code)
 
 ### Installation
-```bash
 git clone [URL du dépôt]
 cd [nom du projet]
 npm install
 npm start
 
 ### ▶️ Lancement du projet
-```bash
 composer install
  php bin/console doctrine:migrations:migrate
- symfony serve # ou : php -S localhost:8000 -t public/
-
-###🔐 Variables d’environnement
+ symfony serve # ou : php -S localhost:8000 -t public
+ 
+🔐 Variables d’environnement
 Créer un fichier .env base sur .env.exemple
 
-###🎥 Démo
-Vidéo : https://www.youtube.com/watch?v=KJHGk0WjhiQ
-Déploiement : https://esprit-pidev-3a33-2025-2026-wellora-production.up.railway.app/
