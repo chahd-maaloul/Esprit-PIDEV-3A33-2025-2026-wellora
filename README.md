@@ -119,4 +119,4 @@ Créer un fichier .env base sur .env.exemple
 
 ###🎥 Démo
 Vidéo : https://www.youtube.com/watch?v=KJHGk0WjhiQ
-Déploiement : (à ajouter)
+Déploiement : https://esprit-pidev-3a33-2025-2026-wellora-production.up.railway.app/
