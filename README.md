@@ -108,12 +108,13 @@ git clone [URL du dépôt]
 cd [nom du projet]
 npm install
 npm start
-
+```bash
 ### ▶️ Lancement du projet
+```bash
 composer install
  php bin/console doctrine:migrations:migrate
  symfony serve # ou : php -S localhost:8000 -t public/
-
+```bash
 ###🔐 Variables d’environnement
 Créer un fichier .env base sur .env.exemple
 
