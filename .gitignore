@@ -55,3 +55,7 @@ Thumbs.db
 ###> liip/imagine-bundle ###
 /public/media/cache/
 ###< liip/imagine-bundle ###
+
+###> Archived files ###
+/archive/
+###< Archived files ###
